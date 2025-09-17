@@ -1,0 +1,112 @@
+[
+  {
+    "id": "cam-a7",
+    "name": "Sony A7 IV",
+    "category": "Camera",
+    "desc": "33MP full-frame mirrorless camera",
+    "rate": 2500,
+    "expertRate": 1800,
+    "img": "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?q=80",
+    "qty": 2,
+    "blackout": ["2025-09-22"]
+  },
+  {
+    "id": "mic-sm7b",
+    "name": "Shure SM7B Microphone",
+    "category": "Audio",
+    "desc": "Dynamic studio microphone",
+    "rate": 600,
+    "expertRate": 800,
+    "img": "https://images.unsplash.com/photo-1513077202514-c511b41bd4c7?q=80",
+    "qty": 3,
+    "blackout": []
+  },
+  {
+    "id": "light-120d",
+    "name": "Aputure 120d II Light Kit",
+    "category": "Lighting",
+    "desc": "Professional LED with softbox",
+    "rate": 900,
+    "expertRate": 1000,
+    "img": "https://images.unsplash.com/photo-1519681393784-d120267933ba?q=80",
+    "qty": 2,
+    "blackout": ["2025-09-20"]
+  },
+  {
+    "id": "drill-pro",
+    "name": "Bosch Rotary Hammer Drill",
+    "category": "Construction",
+    "desc": "Heavy-duty power drill",
+    "rate": 500,
+    "expertRate": 700,
+    "img": "https://images.unsplash.com/photo-1615864691496-1aab3d2f2f5e?q=80",
+    "qty": 5,
+    "blackout": []
+  },
+  {
+    "id": "excavator-mini",
+    "name": "Mini Excavator",
+    "category": "Construction",
+    "desc": "Compact excavator for site work",
+    "rate": 3000,
+    "expertRate": 2000,
+    "img": "https://images.unsplash.com/photo-1606813909865-41a54800b22e?q=80",
+    "qty": 1,
+    "blackout": []
+  },
+  {
+    "id": "stethoscope-pro",
+    "name": "Littmann Stethoscope",
+    "category": "Medical",
+    "desc": "Cardiology-grade stethoscope",
+    "rate": 300,
+    "expertRate": 500,
+    "img": "https://images.unsplash.com/photo-1582719478185-1cf21ef3d9fb?q=80",
+    "qty": 10,
+    "blackout": []
+  },
+  {
+    "id": "ventilator-x",
+    "name": "Portable Ventilator",
+    "category": "Medical",
+    "desc": "Emergency transport ventilator",
+    "rate": 1500,
+    "expertRate": 2500,
+    "img": "https://images.unsplash.com/photo-1584515933487-779824d29309?q=80",
+    "qty": 2,
+    "blackout": []
+  },
+  {
+    "id": "lens-24-70",
+    "name": "Sony 24-70mm f/2.8 Lens",
+    "category": "Camera",
+    "desc": "G Master zoom lens",
+    "rate": 1200,
+    "expertRate": 1000,
+    "img": "https://images.unsplash.com/photo-1507874457470-272b3c8d8ee2?q=80",
+    "qty": 3,
+    "blackout": []
+  },
+  {
+    "id": "mixer-x32",
+    "name": "Behringer X32 Mixer",
+    "category": "Audio",
+    "desc": "Digital mixing console",
+    "rate": 2000,
+    "expertRate": 2200,
+    "img": "https://images.unsplash.com/photo-1485579149621-3123dd979885?q=80",
+    "qty": 1,
+    "blackout": []
+  },
+  {
+    "id": "light-panel",
+    "name": "Godox LED Light Panel",
+    "category": "Lighting",
+    "desc": "Portable video light",
+    "rate": 400,
+    "expertRate": 600,
+    "img": "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?q=80",
+    "qty": 4,
+    "blackout": []
+  }
+]
