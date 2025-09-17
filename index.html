@@ -112,37 +112,67 @@
 
 <!-- Admin Modal -->
 <div class="modal fade" id="adminModal" tabindex="-1">
-  <div class="modal-dialog modal-dialog-scrollable">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg">
     <div class="modal-content">
-      <form id="adminForm">
-        <div class="modal-header">
-          <h5 class="modal-title">Inventory Admin</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body">
-          <div class="row g-2">
-            <div class="col-12"><input id="a_name" class="form-control" placeholder="Name" required></div>
-            <div class="col-6"><input id="a_cat" class="form-control" placeholder="Category"></div>
-            <div class="col-6"><input id="a_img" class="form-control" placeholder="Image URL"></div>
-            <div class="col-4"><input id="a_rate" type="number" class="form-control" placeholder="₹/day"></div>
-            <div class="col-4"><input id="a_expert" type="number" class="form-control" placeholder="Expert ₹"></div>
-            <div class="col-4"><input id="a_qty" type="number" class="form-control" placeholder="Qty"></div>
-            <div class="col-12"><textarea id="a_blackout" class="form-control" placeholder="Blackout dates (YYYY-MM-DD,…)"></textarea></div>
+      <div class="modal-header">
+        <h5 class="modal-title">Admin Panel</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <!-- Tabs -->
+        <ul class="nav nav-tabs">
+          <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#inventory">Inventory</button></li>
+          <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#bookings">Bookings</button></li>
+        </ul>
+        <div class="tab-content mt-3">
+          <!-- Inventory Tab -->
+          <div class="tab-pane fade show active" id="inventory">
+            <form id="adminForm">
+              <div class="row g-2">
+                <div class="col-12"><input id="a_name" class="form-control" placeholder="Name" required></div>
+                <div class="col-6"><input id="a_cat" class="form-control" placeholder="Category"></div>
+                <div class="col-6"><input id="a_img" class="form-control" placeholder="Image URL"></div>
+                <div class="col-4"><input id="a_rate" type="number" class="form-control" placeholder="₹/day"></div>
+                <div class="col-4"><input id="a_expert" type="number" class="form-control" placeholder="Expert ₹"></div>
+                <div class="col-4"><input id="a_qty" type="number" class="form-control" placeholder="Qty"></div>
+                <div class="col-12"><textarea id="a_blackout" class="form-control" placeholder="Blackout dates (YYYY-MM-DD,…)"></textarea></div>
+              </div>
+              <div class="mt-2"><button class="btn btn-brand" type="submit">Add Item</button></div>
+            </form>
+            <hr>
+            <h6>Inventory</h6>
+            <ul id="invList" class="list-group small"></ul>
           </div>
-          <hr>
-          <h6>Inventory</h6>
-          <ul id="invList" class="list-group small"></ul>
+
+          <!-- Bookings Tab -->
+          <div class="tab-pane fade" id="bookings">
+            <h6>Bookings Log</h6>
+            <div class="table-responsive">
+              <table class="table table-sm table-bordered align-middle">
+                <thead class="table-light">
+                  <tr>
+                    <th>Item</th><th>Mode</th><th>Start</th><th>Days</th><th>Qty</th>
+                    <th>Customer</th><th>Phone</th><th>Total</th><th>Time</th><th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="bookingsTable"></tbody>
+              </table>
+            </div>
+            <div class="mt-2 text-end">
+              <button id="clearBookings" class="btn btn-sm btn-outline-danger">Clear All Bookings</button>
+            </div>
+          </div>
         </div>
-        <div class="modal-footer">
-          <button id="exportJson" class="btn btn-outline-secondary" type="button">Export JSON</button>
-          <button id="exportCsv" class="btn btn-outline-success" type="button">Export CSV</button>
-          <button id="exportBookings" class="btn btn-outline-dark" type="button">Export Bookings</button>
-          <label class="btn btn-outline-primary mb-0">
-            Import JSON <input id="importJson" type="file" accept="application/json" hidden>
-          </label>
-          <button id="clearStore" class="btn btn-outline-danger" type="button">Clear All</button>
-        </div>
-      </form>
+      </div>
+      <div class="modal-footer">
+        <button id="exportJson" class="btn btn-outline-secondary" type="button">Export JSON</button>
+        <button id="exportCsv" class="btn btn-outline-success" type="button">Export CSV</button>
+        <button id="exportBookings" class="btn btn-outline-dark" type="button">Export Bookings</button>
+        <label class="btn btn-outline-primary mb-0">
+          Import JSON <input id="importJson" type="file" accept="application/json" hidden>
+        </label>
+        <button id="clearStore" class="btn btn-outline-danger" type="button">Clear All</button>
+      </div>
     </div>
   </div>
 </div>
@@ -166,17 +196,13 @@
 </template>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <script>
-// WhatsApp number
 const WHATSAPP='918970100123';
-
-// Save/load catalog
-function saveCatalog(){ localStorage.setItem('catalogData', JSON.stringify(CATALOG)); }
-function loadCatalog(){ const d=localStorage.getItem('catalogData'); return d?JSON.parse(d):null; }
-
-// Initial catalog
+function saveCatalog(){localStorage.setItem('catalogData',JSON.stringify(CATALOG));}
+function loadCatalog(){const d=localStorage.getItem('catalogData');return d?JSON.parse(d):null;}
 let CATALOG=loadCatalog()||[
-  {id:'cam',name:'Sony A7 IV',category:'Camera',desc:'33MP full-frame',rate:2500,expertRate:1800,img:'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?q=80',qty:2,blackout:['2025-09-22']},
+   {id:'cam',name:'Sony A7 IV',category:'Camera',desc:'33MP full-frame',rate:2500,expertRate:1800,img:'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?q=80',qty:2,blackout:['2025-09-22']},
   {id:'mic',name:'Shure SM7B',category:'Audio',desc:'Podcast mic',rate:600,expertRate:800,img:'https://images.unsplash.com/photo-1643561168149-c87b14f3abd7?q=80&w=1332&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',qty:3,blackout:[]},
  {id:'light-120d',name:'Aputure 120d II Light Kit',category:'Lighting',desc:'LED + softbox for film shoots',rate:900,expertRate:1000,img:'https://plus.unsplash.com/premium_photo-1710736885792-ab9acded6041?q=80&w=1332&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',qty:2,blackout:['2025-09-20']},
   {id:'drill-pro',name:'Bosch Rotary Hammer Drill',category:'Construction',desc:'Heavy-duty SDS drill for concrete',rate:500,expertRate:700,img:'https://images.unsplash.com/photo-1748273784058-57eade4322d6?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',qty:5,blackout:[]},
@@ -188,9 +214,9 @@ let CATALOG=loadCatalog()||[
   {id:'scaff-set',name:'Aluminium Scaffolding Set',category:'Construction',desc:'Safe scaffolding for high work',rate:1500,expertRate:2000,img:'https://images.unsplash.com/photo-1627805460755-0f4a9a90c5f4?q=80&w=735&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',qty:2,blackout:[]},
   {id:'med-vent',name:'Portable Ventilator',category:'Medical',desc:'Emergency-use portable ventilator',rate:3000,expertRate:2500,img:'https://media.istockphoto.com/id/2190660332/photo/cpap-machine-and-mask-on-white-surface-for-sleep-apnea-therapy.jpg?s=1024x1024&w=is&k=20&c=IKwkQSfz2EYW7daMzoXc1ykks90SvePI38inw97rSYM=',qty:1,blackout:[]},
   {id:'med-oxym',name:'Pulse Oximeter Kit',category:'Medical',desc:'SpO2 measurement kit for hospitals',rate:200,expertRate:100,img:'https://images.unsplash.com/photo-1665152444454-7ce72e64390f?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',qty:10,blackout:[]}
+
 ];
 
-// DOM refs
 const catalogEl=document.getElementById('catalog'),emptyEl=document.getElementById('empty');
 const searchInput=document.getElementById('searchInput'),summaryText=document.getElementById('summaryText'),resetBtn=document.getElementById('resetBtn'),chipScroll=document.getElementById('chipScroll');
 const bookingModal=new bootstrap.Modal('#bookingModal');
@@ -201,7 +227,6 @@ const equipTotal=document.getElementById('equipTotal'),expertTotal=document.getE
 const waBtn=document.getElementById('waBtn'),bookingForm=document.getElementById('bookingForm');
 let currentItem=null;
 
-// Render catalog
 function renderCatalog(list){
   catalogEl.innerHTML='';
   const tpl=document.getElementById('cardTpl');
@@ -219,105 +244,22 @@ function renderCatalog(list){
   emptyEl.classList.toggle('d-none',list.length>0);
   summaryText.textContent=`Showing ${list.length} item(s)`;
 }
-
-// Apply filters
-function applyFilters(){
-  const q=searchInput.value.toLowerCase();
-  const cat=chipScroll.querySelector('.chip.active').dataset.cat;
-  const list=CATALOG.filter(it=>(!cat||it.category===cat)&&(!q||it.name.toLowerCase().includes(q)));
-  renderCatalog(list);
-}
-
-// Booking
-function openBooking(item,modeSel){
-  currentItem=item;
-  equipName.textContent=item.name;
-  equipRate.textContent=item.rate;
-  expertRate.textContent=item.expertRate;
-  startDate.value=new Date().toISOString().slice(0,10);
-  days.value=1;qty.value=1;mode.value=modeSel;
-  custLocation.value='';custName.value=custPhone.value=notes.value='';
-  recalcTotals();bookingModal.show();
-}
-function recalcTotals(){
-  const d=+days.value||1,q=+qty.value||1;
-  const eq=currentItem.rate*d*q,ex=(mode.value==='expert'?currentItem.expertRate*d*q:0);
-  equipTotal.textContent=eq;expertTotal.textContent=ex;grandTotal.textContent=eq+ex;
-  const payload=`Rental Inquiry: ${currentItem.name}\nMode: ${mode.value}\nStart:${startDate.value} Days:${d} Qty:${q}\nTotal:₹${eq+ex}`;
-  waBtn.onclick=()=>window.open(`https://wa.me/${WHATSAPP}?text=${encodeURIComponent(payload)}`,'_blank');
-}
+function applyFilters(){const q=searchInput.value.toLowerCase();const cat=chipScroll.querySelector('.chip.active').dataset.cat;const list=CATALOG.filter(it=>(!cat||it.category===cat)&&(!q||it.name.toLowerCase().includes(q)));renderCatalog(list);}
+function openBooking(item,modeSel){currentItem=item;equipName.textContent=item.name;equipRate.textContent=item.rate;expertRate.textContent=item.expertRate;startDate.value=new Date().toISOString().slice(0,10);days.value=1;qty.value=1;mode.value=modeSel;custLocation.value='';custName.value=custPhone.value=notes.value='';recalcTotals();bookingModal.show();}
+function recalcTotals(){const d=+days.value||1,q=+qty.value||1;const eq=currentItem.rate*d*q,ex=(mode.value==='expert'?currentItem.expertRate*d*q:0);equipTotal.textContent=eq;expertTotal.textContent=ex;grandTotal.textContent=eq+ex;const payload=`Rental Inquiry: ${currentItem.name}\nMode: ${mode.value}\nStart:${startDate.value} Days:${d} Qty:${q}\nTotal:₹${eq+ex}`;waBtn.onclick=()=>window.open(`https://wa.me/${WHATSAPP}?text=${encodeURIComponent(payload)}`,'_blank');}
 [startDate,days,qty,mode,custLocation,custName,custPhone,notes].forEach(el=>el.addEventListener('input',recalcTotals));
-bookingForm.onsubmit=e=>{
-  e.preventDefault();bookingModal.hide();alert('Booking saved!');
-  // Save booking log
-  let logs=JSON.parse(localStorage.getItem('bookingLogs')||"[]");
-  logs.push({item:currentItem.name,mode:mode.value,start:startDate.value,days:days.value,qty:qty.value,customer:custName.value,phone:custPhone.value,location:custLocation.value,notes:notes.value,total:grandTotal.textContent,timestamp:new Date().toISOString()});
-  localStorage.setItem('bookingLogs',JSON.stringify(logs));
-};
+bookingForm.onsubmit=e=>{e.preventDefault();bookingModal.hide();alert('Booking saved!');let logs=JSON.parse(localStorage.getItem('bookingLogs')||"[]");logs.push({item:currentItem.name,mode:mode.value,start:startDate.value,days:days.value,qty:qty.value,customer:custName.value,phone:custPhone.value,location:custLocation.value,notes:notes.value,total:grandTotal.textContent,timestamp:new Date().toISOString()});localStorage.setItem('bookingLogs',JSON.stringify(logs));};
+chipScroll.onclick=e=>{const btn=e.target.closest('.chip');if(!btn)return;chipScroll.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));btn.classList.add('active');applyFilters();};
+searchInput.oninput=applyFilters;resetBtn.onclick=()=>{searchInput.value='';chipScroll.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));chipScroll.querySelector('.chip[data-cat=""]').classList.add('active');applyFilters();};applyFilters();
 
-// Chips
-chipScroll.onclick=e=>{
-  const btn=e.target.closest('.chip');if(!btn)return;
-  chipScroll.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
-  btn.classList.add('active');applyFilters();
-};
-searchInput.oninput=applyFilters;
-resetBtn.onclick=()=>{searchInput.value='';chipScroll.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));chipScroll.querySelector('.chip[data-cat=""]').classList.add('active');applyFilters();};
-applyFilters();
-
-// --- Admin Panel ---
-const adminBtn=document.getElementById('adminBtn');
-const adminModal=new bootstrap.Modal('#adminModal');
-const adminForm=document.getElementById('adminForm');
-const invList=document.getElementById('invList');
-adminBtn.onclick=()=>{adminModal.show();renderInventory();};
-function renderInventory(){
-  invList.innerHTML='';
-  CATALOG.forEach((it,i)=>{
-    const li=document.createElement('li');
-    li.className='list-group-item d-flex justify-content-between align-items-center';
-    li.innerHTML=`<span><b>${it.name}</b> <small class="text-muted">(${it.category})</small></span>
-      <button class="btn btn-sm btn-outline-danger" data-i="${i}">Delete</button>`;
-    invList.appendChild(li);
-  });
-}
-adminForm.onsubmit=e=>{
-  e.preventDefault();
-  const name=document.getElementById('a_name').value,cat=document.getElementById('a_cat').value,img=document.getElementById('a_img').value;
-  const rate=+document.getElementById('a_rate').value||0,expert=+document.getElementById('a_expert').value||0,qty=+document.getElementById('a_qty').value||1;
-  const blackout=document.getElementById('a_blackout').value.split(',').map(s=>s.trim()).filter(Boolean);
-  CATALOG.push({id:name.toLowerCase().replace(/\s+/g,'-'),name,category:cat,desc:'',rate,expertRate:expert,img,qty,blackout});
-  saveCatalog();adminForm.reset();renderInventory();applyFilters();
-};
-invList.onclick=e=>{
-  if(e.target.tagName==='BUTTON'){const idx=+e.target.dataset.i;CATALOG.splice(idx,1);saveCatalog();renderInventory();applyFilters();}
-};
-
-// Export/Import
-document.getElementById('exportJson').onclick=()=>{
-  const blob=new Blob([JSON.stringify(CATALOG,null,2)],{type:'application/json'});
-  const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='catalog.json';a.click();URL.revokeObjectURL(url);
-};
-document.getElementById('exportCsv').onclick=()=>{
-  if(!CATALOG.length){alert('Catalog empty');return;}
-  const headers=["ID","Name","Category","Description","Rate","ExpertRate","Qty","BlackoutDates","Image"];
-  const rows=CATALOG.map(it=>[it.id,it.name,it.category,it.desc||'',it.rate,it.expertRate,it.qty,(it.blackout||[]).join(';'),it.img||'']);
-  const csv=[headers.join(","),...rows.map(r=>r.map(f=>`"${f}"`).join(","))].join("\n");
-  const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='catalog.csv';a.click();URL.revokeObjectURL(url);
-};
-document.getElementById('importJson').onchange=e=>{
-  const file=e.target.files[0];if(!file)return;const reader=new FileReader();
-  reader.onload=ev=>{try{const data=JSON.parse(ev.target.result);if(Array.isArray(data)){CATALOG=data;saveCatalog();renderInventory();applyFilters();alert('Catalog imported');}else alert('Invalid JSON');}catch(err){alert('Error: '+err.message);}};
-  reader.readAsText(file);
-};
-document.getElementById('clearStore').onclick=()=>{if(confirm('Clear catalog?')){localStorage.removeItem('catalogData');location.reload();}};
-document.getElementById('exportBookings').onclick=()=>{
-  const logs=JSON.parse(localStorage.getItem('bookingLogs')||"[]");if(!logs.length){alert('No bookings');return;}
-  const headers=["Item","Mode","StartDate","Days","Qty","Customer","Phone","Location","Notes","Total","Timestamp"];
-  const rows=logs.map(l=>[l.item,l.mode,l.start,l.days,l.qty,l.customer,l.phone,l.location,l.notes||'',l.total,l.timestamp]);
-  const csv=[headers.join(","),...rows.map(r=>r.map(f=>`"${f}"`).join(","))].join("\n");
-  const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='bookings.csv';a.click();URL.revokeObjectURL(url);
-};
+const adminBtn=document.getElementById('adminBtn');const adminModal=new bootstrap.Modal('#adminModal');const adminForm=document.getElementById('adminForm');const invList=document.getElementById('invList');
+adminBtn.onclick=()=>{adminModal.show();renderInventory();renderBookings();};
+function renderInventory(){invList.innerHTML='';CATALOG.forEach((it,i)=>{const li=document.createElement('li');li.className='list-group-item d-flex justify-content-between align-items-center';li.innerHTML=`<span><b>${it.name}</b> <small class="text-muted">(${it.category})</small></span><button class="btn btn-sm btn-outline-danger" data-i="${i}">Delete</button>`;invList.appendChild(li);});}
+adminForm.onsubmit=e=>{e.preventDefault();const name=document.getElementById('a_name').value.trim(),cat=document.getElementById('a_cat').value.trim(),img=document.getElementById('a_img').value.trim();const rate=+document.getElementById('a_rate').value||0,expert=+document.getElementById('a_expert').value||0,qty=+document.getElementById('a_qty').value||1;const blackout=document.getElementById('a_blackout').value.split(',').map(s=>s.trim()).filter(Boolean);if(!name){alert("Item name required");return;}CATALOG.push({id:name.toLowerCase().replace(/\s+/g,'-'),name,category:cat,desc:'',rate,expertRate:expert,img,qty,blackout});saveCatalog();adminForm.reset();renderInventory();applyFilters();};
+invList.onclick=e=>{if(e.target.tagName==='BUTTON'){const idx=+e.target.dataset.i;CATALOG.splice(idx,1);saveCatalog();renderInventory();applyFilters();}};
+function renderBookings(){const logs=JSON.parse(localStorage.getItem('bookingLogs')||"[]");const tbody=document.getElementById('bookingsTable');tbody.innerHTML='';if(!logs.length){tbody.innerHTML=`<tr><td colspan="10" class="text-center text-muted">No bookings yet</td></tr>`;return;}logs.forEach((l,i)=>{const tr=document.createElement('tr');tr.innerHTML=`<td>${l.item}</td><td>${l.mode}</td><td>${l.start}</td><td>${l.days}</td><td>${l.qty}</td><td>${l.customer}</td><td>${l.phone}</td><td>₹${l.total}</td><td>${new Date(l.timestamp).toLocaleString()}</td><td><button class="btn btn-sm btn-outline-primary me-1" data-download="${i}">PDF</button><button class="btn btn-sm btn-outline-danger" data-i="${i}">Delete</button></td>`;tbody.appendChild(tr);});}
+document.getElementById('bookingsTable').addEventListener('click',e=>{if(e.target.dataset.i!==undefined){const idx=+e.target.dataset.i;let logs=JSON.parse(localStorage.getItem('bookingLogs')||"[]");logs.splice(idx,1);localStorage.setItem('bookingLogs',JSON.stringify(logs));renderBookings();}if(e.target.dataset.download!==undefined){const idx=+e.target.dataset.download;let logs=JSON.parse(localStorage.getItem('bookingLogs')||"[]");const b=logs[idx];const { jsPDF }=window.jspdf;const doc=new jsPDF();doc.setFontSize(16);doc.text("Booking Receipt",20,20);doc.setFontSize(12);doc.text(`Item: ${b.item}`,20,40);doc.text(`Mode: ${b.mode}`,20,50);doc.text(`Start Date: ${b.start}`,20,60);doc.text(`Days: ${b.days}`,20,70);doc.text(`Quantity: ${b.qty}`,20,80);doc.text(`Customer: ${b.customer}`,20,90);doc.text(`Phone: ${b.phone}`,20,100);doc.text(`Location: ${b.location}`,20,110);doc.text(`Notes: ${b.notes||"-"}`,20,120);doc.text(`Total: ₹${b.total}`,20,130);doc.text(`Timestamp: ${new Date(b.timestamp).toLocaleString()}`,20,140);doc.save(`booking-${idx+1}.pdf`);}});
+document.getElementById('clearBookings').addEventListener('click',()=>{if(confirm('Clear ALL bookings?')){localStorage.removeItem('bookingLogs');renderBookings();}});
 </script>
 </body>
 </html>
