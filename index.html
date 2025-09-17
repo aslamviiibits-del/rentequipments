@@ -47,15 +47,6 @@
   <input id="searchInput" class="form-control" placeholder="Search equipment…" />
 </div>
 
-<!-- Availability -->
-<div class="container-fluid mt-2 px-3">
-  <div class="row g-2">
-    <div class="col-6"><input type="date" id="startDateGlobal" class="form-control" /></div>
-    <div class="col-3"><input type="number" id="daysGlobal" class="form-control" min="1" value="1" /></div>
-    <div class="col-3"><input type="text" id="locationInput" class="form-control" placeholder="City/Pincode" /></div>
-  </div>
-</div>
-
 <!-- Catalog -->
 <div class="container-fluid my-3 px-3">
   <div id="catalog" class="row g-3"></div>
@@ -142,7 +133,15 @@
           <h6>Inventory</h6>
           <ul id="invList" class="list-group small"></ul>
         </div>
-        <div class="modal-footer"><button class="btn btn-brand" type="submit">Save</button></div>
+        <div class="modal-footer">
+          <button id="exportJson" class="btn btn-outline-secondary" type="button">Export JSON</button>
+          <button id="exportCsv" class="btn btn-outline-success" type="button">Export CSV</button>
+          <button id="exportBookings" class="btn btn-outline-dark" type="button">Export Bookings</button>
+          <label class="btn btn-outline-primary mb-0">
+            Import JSON <input id="importJson" type="file" accept="application/json" hidden>
+          </label>
+          <button id="clearStore" class="btn btn-outline-danger" type="button">Clear All</button>
+        </div>
       </form>
     </div>
   </div>
@@ -168,9 +167,15 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-const WHATSAPP='918970100123'; // your business number
+// WhatsApp number
+const WHATSAPP='918970100123';
 
-let CATALOG=[
+// Save/load catalog
+function saveCatalog(){ localStorage.setItem('catalogData', JSON.stringify(CATALOG)); }
+function loadCatalog(){ const d=localStorage.getItem('catalogData'); return d?JSON.parse(d):null; }
+
+// Initial catalog
+let CATALOG=loadCatalog()||[
   {id:'cam',name:'Sony A7 IV',category:'Camera',desc:'33MP full-frame',rate:2500,expertRate:1800,img:'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?q=80',qty:2,blackout:['2025-09-22']},
   {id:'mic',name:'Shure SM7B',category:'Audio',desc:'Podcast mic',rate:600,expertRate:800,img:'https://images.unsplash.com/photo-1643561168149-c87b14f3abd7?q=80&w=1332&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',qty:3,blackout:[]},
  {id:'light-120d',name:'Aputure 120d II Light Kit',category:'Lighting',desc:'LED + softbox for film shoots',rate:900,expertRate:1000,img:'https://plus.unsplash.com/premium_photo-1710736885792-ab9acded6041?q=80&w=1332&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',qty:2,blackout:['2025-09-20']},
@@ -183,23 +188,20 @@ let CATALOG=[
   {id:'scaff-set',name:'Aluminium Scaffolding Set',category:'Construction',desc:'Safe scaffolding for high work',rate:1500,expertRate:2000,img:'https://images.unsplash.com/photo-1627805460755-0f4a9a90c5f4?q=80&w=735&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',qty:2,blackout:[]},
   {id:'med-vent',name:'Portable Ventilator',category:'Medical',desc:'Emergency-use portable ventilator',rate:3000,expertRate:2500,img:'https://media.istockphoto.com/id/2190660332/photo/cpap-machine-and-mask-on-white-surface-for-sleep-apnea-therapy.jpg?s=1024x1024&w=is&k=20&c=IKwkQSfz2EYW7daMzoXc1ykks90SvePI38inw97rSYM=',qty:1,blackout:[]},
   {id:'med-oxym',name:'Pulse Oximeter Kit',category:'Medical',desc:'SpO2 measurement kit for hospitals',rate:200,expertRate:100,img:'https://images.unsplash.com/photo-1665152444454-7ce72e64390f?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',qty:10,blackout:[]}
-
 ];
 
+// DOM refs
 const catalogEl=document.getElementById('catalog'),emptyEl=document.getElementById('empty');
-const searchInput=document.getElementById('searchInput'),summaryText=document.getElementById('summaryText');
-const resetBtn=document.getElementById('resetBtn'),chipScroll=document.getElementById('chipScroll');
-const startDateGlobal=document.getElementById('startDateGlobal'),daysGlobal=document.getElementById('daysGlobal'),locationInput=document.getElementById('locationInput');
-
+const searchInput=document.getElementById('searchInput'),summaryText=document.getElementById('summaryText'),resetBtn=document.getElementById('resetBtn'),chipScroll=document.getElementById('chipScroll');
 const bookingModal=new bootstrap.Modal('#bookingModal');
 const equipName=document.getElementById('equipName'),equipRate=document.getElementById('equipRate'),expertRate=document.getElementById('expertRate');
 const startDate=document.getElementById('startDate'),days=document.getElementById('days'),qty=document.getElementById('qty'),mode=document.getElementById('mode');
 const custLocation=document.getElementById('custLocation'),custName=document.getElementById('custName'),custPhone=document.getElementById('custPhone'),notes=document.getElementById('notes');
 const equipTotal=document.getElementById('equipTotal'),expertTotal=document.getElementById('expertTotal'),grandTotal=document.getElementById('grandTotal');
 const waBtn=document.getElementById('waBtn'),bookingForm=document.getElementById('bookingForm');
-
 let currentItem=null;
 
+// Render catalog
 function renderCatalog(list){
   catalogEl.innerHTML='';
   const tpl=document.getElementById('cardTpl');
@@ -218,26 +220,25 @@ function renderCatalog(list){
   summaryText.textContent=`Showing ${list.length} item(s)`;
 }
 
+// Apply filters
 function applyFilters(){
   const q=searchInput.value.toLowerCase();
   const cat=chipScroll.querySelector('.chip.active').dataset.cat;
-  const list=CATALOG.filter(it=>{
-    return (!cat||it.category===cat)&&(!q||it.name.toLowerCase().includes(q));
-  });
+  const list=CATALOG.filter(it=>(!cat||it.category===cat)&&(!q||it.name.toLowerCase().includes(q)));
   renderCatalog(list);
 }
 
+// Booking
 function openBooking(item,modeSel){
   currentItem=item;
   equipName.textContent=item.name;
   equipRate.textContent=item.rate;
   expertRate.textContent=item.expertRate;
-  startDate.value=startDateGlobal.value||new Date().toISOString().slice(0,10);
-  days.value=daysGlobal.value||1;qty.value=1;mode.value=modeSel;
-  custLocation.value=locationInput.value||'';custName.value=custPhone.value=notes.value='';
+  startDate.value=new Date().toISOString().slice(0,10);
+  days.value=1;qty.value=1;mode.value=modeSel;
+  custLocation.value='';custName.value=custPhone.value=notes.value='';
   recalcTotals();bookingModal.show();
 }
-
 function recalcTotals(){
   const d=+days.value||1,q=+qty.value||1;
   const eq=currentItem.rate*d*q,ex=(mode.value==='expert'?currentItem.expertRate*d*q:0);
@@ -246,16 +247,77 @@ function recalcTotals(){
   waBtn.onclick=()=>window.open(`https://wa.me/${WHATSAPP}?text=${encodeURIComponent(payload)}`,'_blank');
 }
 [startDate,days,qty,mode,custLocation,custName,custPhone,notes].forEach(el=>el.addEventListener('input',recalcTotals));
-bookingForm.onsubmit=e=>{e.preventDefault();bookingModal.hide();alert('Booking saved! We will contact you.');};
+bookingForm.onsubmit=e=>{
+  e.preventDefault();bookingModal.hide();alert('Booking saved!');
+  // Save booking log
+  let logs=JSON.parse(localStorage.getItem('bookingLogs')||"[]");
+  logs.push({item:currentItem.name,mode:mode.value,start:startDate.value,days:days.value,qty:qty.value,customer:custName.value,phone:custPhone.value,location:custLocation.value,notes:notes.value,total:grandTotal.textContent,timestamp:new Date().toISOString()});
+  localStorage.setItem('bookingLogs',JSON.stringify(logs));
+};
 
-// chips
+// Chips
 chipScroll.onclick=e=>{
   const btn=e.target.closest('.chip');if(!btn)return;
   chipScroll.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
   btn.classList.add('active');applyFilters();
 };
-searchInput.oninput=applyFilters;resetBtn.onclick=()=>{searchInput.value='';chipScroll.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));chipScroll.querySelector('.chip[data-cat=""]').classList.add('active');applyFilters();};
+searchInput.oninput=applyFilters;
+resetBtn.onclick=()=>{searchInput.value='';chipScroll.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));chipScroll.querySelector('.chip[data-cat=""]').classList.add('active');applyFilters();};
 applyFilters();
+
+// --- Admin Panel ---
+const adminBtn=document.getElementById('adminBtn');
+const adminModal=new bootstrap.Modal('#adminModal');
+const adminForm=document.getElementById('adminForm');
+const invList=document.getElementById('invList');
+adminBtn.onclick=()=>{adminModal.show();renderInventory();};
+function renderInventory(){
+  invList.innerHTML='';
+  CATALOG.forEach((it,i)=>{
+    const li=document.createElement('li');
+    li.className='list-group-item d-flex justify-content-between align-items-center';
+    li.innerHTML=`<span><b>${it.name}</b> <small class="text-muted">(${it.category})</small></span>
+      <button class="btn btn-sm btn-outline-danger" data-i="${i}">Delete</button>`;
+    invList.appendChild(li);
+  });
+}
+adminForm.onsubmit=e=>{
+  e.preventDefault();
+  const name=document.getElementById('a_name').value,cat=document.getElementById('a_cat').value,img=document.getElementById('a_img').value;
+  const rate=+document.getElementById('a_rate').value||0,expert=+document.getElementById('a_expert').value||0,qty=+document.getElementById('a_qty').value||1;
+  const blackout=document.getElementById('a_blackout').value.split(',').map(s=>s.trim()).filter(Boolean);
+  CATALOG.push({id:name.toLowerCase().replace(/\s+/g,'-'),name,category:cat,desc:'',rate,expertRate:expert,img,qty,blackout});
+  saveCatalog();adminForm.reset();renderInventory();applyFilters();
+};
+invList.onclick=e=>{
+  if(e.target.tagName==='BUTTON'){const idx=+e.target.dataset.i;CATALOG.splice(idx,1);saveCatalog();renderInventory();applyFilters();}
+};
+
+// Export/Import
+document.getElementById('exportJson').onclick=()=>{
+  const blob=new Blob([JSON.stringify(CATALOG,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='catalog.json';a.click();URL.revokeObjectURL(url);
+};
+document.getElementById('exportCsv').onclick=()=>{
+  if(!CATALOG.length){alert('Catalog empty');return;}
+  const headers=["ID","Name","Category","Description","Rate","ExpertRate","Qty","BlackoutDates","Image"];
+  const rows=CATALOG.map(it=>[it.id,it.name,it.category,it.desc||'',it.rate,it.expertRate,it.qty,(it.blackout||[]).join(';'),it.img||'']);
+  const csv=[headers.join(","),...rows.map(r=>r.map(f=>`"${f}"`).join(","))].join("\n");
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='catalog.csv';a.click();URL.revokeObjectURL(url);
+};
+document.getElementById('importJson').onchange=e=>{
+  const file=e.target.files[0];if(!file)return;const reader=new FileReader();
+  reader.onload=ev=>{try{const data=JSON.parse(ev.target.result);if(Array.isArray(data)){CATALOG=data;saveCatalog();renderInventory();applyFilters();alert('Catalog imported');}else alert('Invalid JSON');}catch(err){alert('Error: '+err.message);}};
+  reader.readAsText(file);
+};
+document.getElementById('clearStore').onclick=()=>{if(confirm('Clear catalog?')){localStorage.removeItem('catalogData');location.reload();}};
+document.getElementById('exportBookings').onclick=()=>{
+  const logs=JSON.parse(localStorage.getItem('bookingLogs')||"[]");if(!logs.length){alert('No bookings');return;}
+  const headers=["Item","Mode","StartDate","Days","Qty","Customer","Phone","Location","Notes","Total","Timestamp"];
+  const rows=logs.map(l=>[l.item,l.mode,l.start,l.days,l.qty,l.customer,l.phone,l.location,l.notes||'',l.total,l.timestamp]);
+  const csv=[headers.join(","),...rows.map(r=>r.map(f=>`"${f}"`).join(","))].join("\n");
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='bookings.csv';a.click();URL.revokeObjectURL(url);
+};
 </script>
 </body>
 </html>
